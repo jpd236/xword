@@ -182,6 +182,8 @@ public:
     puz::Square * MoveFocusedWord(puz::Word * word)
         { return MoveFocusedSquare(word->front(), word, m_focusedDirection); }
 
+    void RecalculateFocusedWord();
+
     void SendEvent(int type);
 
     short GetDirection() const;

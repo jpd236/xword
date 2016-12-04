@@ -66,6 +66,8 @@
     #include "../images/xword.xpm"
 #endif
 
+#include <stack>
+
 
 //------------------------------------------------------------------------------
 // Menu and Toolbar IDs
@@ -101,6 +103,7 @@ enum toolIds
     ID_REVEAL_SELECTION,
     ID_REVEAL_GRID,
     ID_CONVERT_TO_NORMAL,
+    ID_MOVE_ADJACENT,
 
     ID_ERASE_GRID,
     ID_ERASE_UNCROSSED,
@@ -283,6 +286,9 @@ MyFrame::ManageTools()
 
         { ID_CONVERT_TO_NORMAL, wxITEM_NORMAL, _T("Convert to &Normal Puzzle"), NULL, NULL,
                    _handler(MyFrame::OnConvertToNormal) },
+
+        { ID_MOVE_ADJACENT, wxITEM_NORMAL, _T("Move &Adjacent Letters..."), NULL, NULL,
+                   _handler(MyFrame::OnMoveAdjacent) },
 
         { ID_ERASE_GRID,       wxITEM_NORMAL, _T("Erase &Grid"), NULL, NULL,
                    _handler(MyFrame::OnEraseGrid) },
@@ -1285,6 +1291,7 @@ MyFrame::CreateMenuBar()
             m_toolMgr.Add(submenu, ID_RESET_TIMER);
         menu->AppendSubMenu(submenu, _T("&Timer"));
         submenu = new wxMenu();
+            m_toolMgr.Add(submenu, ID_MOVE_ADJACENT);
             m_toolMgr.Add(submenu, ID_CONVERT_TO_NORMAL);
         menu->AppendSubMenu(submenu, _T("&Diagramless"));
     mb->Append(menu, _T("&Tools"));
@@ -1543,6 +1550,7 @@ MyFrame::EnableReveal(bool enable)
 void
 MyFrame::EnableDiagramless(bool enable)
 {
+    m_toolMgr.Enable(ID_MOVE_ADJACENT, enable);
     m_toolMgr.Enable(ID_CONVERT_TO_NORMAL, enable);
     m_menubar->Enable(m_menubar->FindMenuItem("Tools", "Diagramless"), enable);
 }
@@ -2073,6 +2081,24 @@ MyFrame::OnConvertToNormal(wxCommandEvent & WXUNUSED(evt))
 
     // Send puzzle updated event
     m_XGridCtrl->SendEvent(wxEVT_PUZ_LETTER);
+}
+
+void
+MyFrame::OnMoveAdjacent(wxCommandEvent & WXUNUSED(evt))
+{
+    wxASSERT(m_puz.IsDiagramless());
+
+    puz::Square * focusedSquare = GetFocusedSquare();
+    if (focusedSquare == NULL || focusedSquare->IsBlack() ||
+            focusedSquare->IsBlank()) {
+        XWordErrorMessage(this, "To move adjacent letters, you must first "
+                                "select a letter in the grid.");
+        return;
+    }
+
+    // Store the source square; we'll apply the move when a new square is
+    // selected.
+    m_moveAdjacentSource = focusedSquare;
 }
 
 void
@@ -2660,9 +2686,156 @@ MyFrame::OnPrintCustom(wxCommandEvent & WXUNUSED(evt))
 // XGridCtrl and CluePanel events
 //------------------------------------------------------------------------------
 
+// TODO: Anonymous function?
+bool
+MyFrame::ShouldVisitSquare(std::vector<wxPoint> visitedSquares, puz::Square & curSquare, wxPoint point, int maxCol, int maxRow)
+{
+    // Don't visit points which are out of bounds or have already been visited.
+    if (point.x < 0 || point.x >= maxCol || point.y < 0 || point.y >= maxRow
+         || std::find(visitedSquares.begin(), visitedSquares.end(), point) != visitedSquares.end())
+        return false;
+
+    puz::Square & square = m_XGridCtrl->At(point.x, point.y);
+    // Visit any non-blank square, but never go from a black square to a
+    // non-black square as this could lead to a non-adjacent letter.
+    return !square.IsBlank() && !(curSquare.IsBlack() && !square.IsBlack());
+}
+
 void
 MyFrame::OnGridFocus(wxPuzEvent & evt)
 {
+    if (m_moveAdjacentSource != NULL)
+    {
+        // TODO: Warn if overwriting a letter
+        // TODO: Add "All"
+        // TODO: KB input?
+        // TODO: Highlight selected letters using multi-select color?
+        // TODO: Unit tests?
+
+        // Find all squares which are adjacent to the source.
+        int minLetterRow(INT_MAX), maxLetterRow(INT_MIN), minLetterCol(INT_MAX), maxLetterCol(INT_MIN);
+
+        std::stack<wxPoint> squaresToCheck;
+        // TODO: Can we be more efficient than a list of points?
+        std::vector<wxPoint> squaresToMove;
+        squaresToCheck.push(wxPoint(m_moveAdjacentSource->GetCol(),
+                                    m_moveAdjacentSource->GetRow()));
+        size_t gridWidth = m_XGridCtrl->GetGrid()->GetWidth();
+        size_t gridHeight = m_XGridCtrl->GetGrid()->GetHeight();
+        while (!squaresToCheck.empty())
+        {
+            wxPoint curPoint = squaresToCheck.top();
+            squaresToCheck.pop();
+            squaresToMove.push_back(curPoint);
+
+            int col = curPoint.x;
+            int row = curPoint.y;
+            puz::Square & curSquare = m_XGridCtrl->At(curPoint.x, curPoint.y);
+
+            // Update boundaries for warning about off-grid letters.
+            if (!curSquare.IsBlack()) {
+                minLetterCol = std::min(minLetterCol, col);
+                maxLetterCol = std::max(maxLetterCol, col);
+                minLetterRow = std::min(minLetterRow, row);
+                maxLetterRow = std::max(maxLetterRow, row);
+            }
+
+            // Add neighbors to the stack.
+            wxPoint top(col, row - 1);
+            if (ShouldVisitSquare(squaresToMove, curSquare, top, gridWidth, gridHeight))
+                squaresToCheck.push(top);
+            wxPoint bottom(col, row + 1);
+            if (ShouldVisitSquare(squaresToMove, curSquare, bottom, gridWidth, gridHeight))
+                squaresToCheck.push(bottom);
+            wxPoint left(col - 1, row);
+            if (ShouldVisitSquare(squaresToMove, curSquare, left, gridWidth, gridHeight))
+                squaresToCheck.push(left);
+            wxPoint right(col + 1, row);
+            if (ShouldVisitSquare(squaresToMove, curSquare, right, gridWidth, gridHeight))
+                squaresToCheck.push(right);
+        }
+
+        puz::Square * moveAdjacentDest = evt.GetSquare();
+        short rowOffset =
+                moveAdjacentDest->GetRow() - m_moveAdjacentSource->GetRow();
+        short colOffset =
+                moveAdjacentDest->GetCol() - m_moveAdjacentSource->GetCol();
+
+        // TODO: Make this a cancelable prompt. Cancel should restore focus to
+        // the old square and nullify m_moveAdjacentSource. No should restore
+        // focus but not nullify m_moveAdjacentSource so the move can be
+        // retried.
+        if ((minLetterCol + colOffset >= 0 &&
+             maxLetterCol + colOffset < gridHeight &&
+             minLetterRow + rowOffset >= 0 &&
+             maxLetterRow + rowOffset < gridHeight) ||
+                XWordPrompt(this, "Moving adjacent letters to the selected "
+                                  "square will result in some letters being "
+                                  "deleted as they would fall outside the "
+                                  "grid after the move. Continue?")) {
+            std::vector<puz::string_t> squareTexts;
+            // TODO: Find a better way to do this
+            for(std::vector<wxPoint>::iterator it = squaresToMove.begin();
+                    it != squaresToMove.end();
+                    ++it) {
+                wxPoint curPoint = *it;
+                puz::Square & curSquare =
+                        m_XGridCtrl->At(curPoint.x, curPoint.y);
+                squareTexts.push_back(curSquare.GetText());
+            }
+
+            wxLogDebug("offset = (%d, %d), min = (%d, %d), max = (%d, %d)", colOffset, rowOffset,
+                       minLetterCol, minLetterRow, maxLetterCol, maxLetterRow);
+            for (std::pair<std::vector<wxPoint>::iterator,
+                 std::vector<puz::string_t>::iterator> i(squaresToMove.begin(),
+                                                         squareTexts.begin());
+                 i.first != squaresToMove.end() /* && i.second != squareTexts() */;
+                 ++i.first, ++i.second)
+            {
+                wxLogDebug("Moving (%d, %d) with val %s", (*i.first).x, (*i.first).y, *i.second);
+            }
+
+            m_XGridCtrl->Freeze();
+            for (std::pair<std::vector<wxPoint>::iterator,
+                 std::vector<puz::string_t>::iterator> i(squaresToMove.begin(),
+                                                         squareTexts.begin());
+                 i.first != squaresToMove.end() /* && i.second != squareTexts() */;
+                 ++i.first, ++i.second)
+            {
+                wxPoint curPoint = *i.first;
+                puz::Square & curSquare =
+                        m_XGridCtrl->At(curPoint.x, curPoint.y);
+                wxPoint destPoint(curPoint.x + colOffset, curPoint.y + rowOffset);
+                if (destPoint.x >= 0 &&
+                        destPoint.x < gridWidth &&
+                        destPoint.y >= 0 &&
+                        destPoint.y < gridHeight) {
+                    puz::Square & destSquare =
+                            m_XGridCtrl->At(destPoint.x, destPoint.y);
+                    wxLogDebug("Updating (%d, %d) to %s", destPoint.x, destPoint.y, *i.second);
+                    m_XGridCtrl->SetSquareText(destSquare, *i.second);
+                }
+
+                // Blank the current point if it's not the destination of
+                // another point.
+                wxPoint curInputPoint(curPoint.x - colOffset, curPoint.y - rowOffset);
+                if (std::find(squaresToMove.begin(), squaresToMove.end(), curInputPoint) == squaresToMove.end()) {
+                    wxLogDebug("Blanking (%d, %d)", curPoint.x, curPoint.y);
+                    m_XGridCtrl->SetSquareText(curSquare, puz::Square::Blank);
+                } else {
+                    wxLogDebug("Not blanking (%d, %d)", curPoint.x, curPoint.y);
+                }
+            }
+
+            m_XGridCtrl->Thaw();
+        }
+        m_moveAdjacentSource = NULL;
+
+        // We've shifted around black squares since focus was moved, so we must
+        // recalculate the currently focused word.
+        m_XGridCtrl->RecalculateFocusedWord();
+    }
+
     // Update clue lists and clue prompt
     UpdateClues();
     evt.Skip();

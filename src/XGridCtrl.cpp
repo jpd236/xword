@@ -1447,12 +1447,7 @@ XGridCtrl::OnChar(wxKeyEvent & evt)
         {
             SetSquareText(*GetFocusedSquare(), puz2wx(puz::Square::Black));
             MoveAfterLetter();
-            // Invalidate the current focused word
-            if (m_ownsFocusedWord)
-                delete m_focusedWord;
-            m_focusedWord = NULL;
-            // Make a new word
-            SetFocusedSquare();
+            RecalculateFocusedWord();
         }
     }
     else if (IsValidChar(key) && key < WXK_START)
@@ -1462,6 +1457,16 @@ XGridCtrl::OnChar(wxKeyEvent & evt)
 }
 
 
+void
+XGridCtrl::RecalculateFocusedWord()
+{
+    // Invalidate the current focused word
+    if (m_ownsFocusedWord)
+        delete m_focusedWord;
+    m_focusedWord = NULL;
+    // Make a new word
+    SetFocusedSquare();
+}
 
 void
 XGridCtrl::OnLetter(wxChar key, int mod)

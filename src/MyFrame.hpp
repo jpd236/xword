@@ -298,6 +298,9 @@ private:
     void OnRevealWord     (wxCommandEvent & WXUNUSED(evt));
     void OnRevealLetter   (wxCommandEvent & WXUNUSED(evt));
     void OnConvertToNormal(wxCommandEvent & WXUNUSED(evt));
+    void OnMoveAdjacent   (wxCommandEvent & WXUNUSED(evt));
+    puz::Square * m_moveAdjacentSource = NULL;
+    bool ShouldVisitSquare(std::vector<wxPoint> visitedSquares, puz::Square & curSquare, wxPoint point, int maxCol, int maxRow);
 
     void OnEraseGrid      (wxCommandEvent & WXUNUSED(evt));
     void OnEraseUncrossed (wxCommandEvent & WXUNUSED(evt));
