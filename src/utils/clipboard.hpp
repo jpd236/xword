@@ -22,7 +22,7 @@
 #include <wx/clipbrd.h>
 #include <wx/tokenzr.h>
 #include <vector>
-#include "puz/word.hpp"
+#include "puz/Word.hpp"
 #include "string.hpp"
 
 // A class for copying the text from a word of squares.
