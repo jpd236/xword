@@ -37,8 +37,11 @@ project "puz"
         links { "zdll" }
 
     configuration "linux"
-        defines { [[PUZ_API=""]] }
-        links { "dl", "zlib" }
+        defines { 
+            "PUZ_API=",
+	    "LUAPUZ_API=",
+        }
+        links { "dl", "z" }
 
     configuration "macosx"
         defines {
