@@ -18,12 +18,7 @@ project "XWord"
     configuration "not macosx"
         excludes { "dialogs/wxFB_PreferencesPanelsOSX.*" }
 
-    -- --------------------------------------------------------------------
-    -- wxWidgets
-    -- --------------------------------------------------------------------
-
-    dofile "../premake4_wxdefs.lua"
-    dofile "../premake4_wxlibs.lua"
+    configuration { }
 
     -- --------------------------------------------------------------------
     -- puz
@@ -37,8 +32,13 @@ project "XWord"
         }
 
     configuration "linux"
-        defines { [[PUZ_API=""]] }
-        links { "dl" }
+        defines {
+            "PUZ_API=",
+            "LUAPUZ_API=",
+        }
+        -- TODO: Why is yajl necessary, when it's only needed by puz?
+        -- libpuz.so seems to link to libyajl.so via a bad relative path
+        links { "dl", "yajl" }
 
     configuration "macosx"
         defines {
@@ -96,7 +96,7 @@ project "XWord"
                 "-lwxbindcore",
                 "-lwxbindbase",
                 "-lwxlua",
-                "-llua5.1",
+                "-llua51",
             }
 
         -- Postbuild: copy lua51.dll to XWord directory
@@ -114,6 +114,15 @@ project "XWord"
                 "xwordlua*",
             }
     end
+
+    -- --------------------------------------------------------------------
+    -- wxWidgets
+    -- --------------------------------------------------------------------
+
+    -- Note: This must come after the link options above to ensure correct
+    -- link order on Linux.
+    dofile "../premake4_wxdefs.lua"
+    dofile "../premake4_wxlibs.lua"
 
     -- --------------------------------------------------------------------
     -- Resources
