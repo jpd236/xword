@@ -34,7 +34,10 @@ project "luapuz"
 
 
     configuration "linux"
-        defines { [[PUZ_API=""]] }
+        defines {
+            [[PUZ_API=""]],
+            [[LUAPUZ_API=""]]
+        }
         links { "dl" }
 
     configuration "macosx"

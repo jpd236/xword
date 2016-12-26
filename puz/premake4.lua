@@ -37,7 +37,7 @@ project "puz"
 
     configuration "linux"
         defines { [[PUZ_API=""]] }
-        links { "dl", "zlib" }
+        links { "dl", "z" }
 
     configuration "macosx"
         defines {

@@ -22,6 +22,7 @@
 #include <string>
 #include <ctime>
 #include <cassert>
+#include <cstdlib>
 
 namespace puz {
 
