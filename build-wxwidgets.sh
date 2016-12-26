@@ -16,17 +16,20 @@ mkdir -p $INSTALL_PATH
 
 WX_CONFIGURE_FLAGS="\
   --disable-shared \
-  --enable-compat28 \
-  --with-macosx-version-min=10.7 \
-  --with-libpng=builtin \
-  --with-libjpeg=builtin \
-  --with-libtiff=builtin \
-  CFLAGS=-fvisibility-inlines-hidden \
-  CXXFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
-  CPPFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
-  OBJCFLAGS=-fvisibility-inlines-hidden \
-  OBJCXXFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
-  LDFLAGS=-stdlib=libc++"
+  --enable-compat28"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  WX_CONFIGURE_FLAGS="$WX_CONFIGURE_FLAGS \
+    --with-macosx-version-min=10.7 \
+    --with-libpng=builtin \
+    --with-libjpeg=builtin \
+    --with-libtiff=builtin \
+    CFLAGS=-fvisibility-inlines-hidden \
+    CXXFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
+    CPPFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
+    OBJCFLAGS=-fvisibility-inlines-hidden \
+    OBJCXXFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
+    LDFLAGS=-stdlib=libc++"
+fi
 WX_MAKE_FLAGS="SHARED=0"
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
@@ -42,8 +45,8 @@ fi
 echo "Building wxWidgets version $WX_VERSION for configuration: $CONFIGURATION"
 mkdir -p $INSTALL_PATH
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  # Mac OS X
+if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux"* ]]; then
+  # Mac OS X / Linux
   BUILD_COMMAND="./configure --prefix=$INSTALL_PATH $WX_CONFIGURE_FLAGS && make -j 4 && make install"
 else
   # Windows
