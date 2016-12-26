@@ -26,6 +26,8 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <cstdlib>
+#include <cstring>
 
 namespace puz {
 

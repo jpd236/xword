@@ -18,7 +18,7 @@
 #ifndef ALIGN_CTRL_H
 #define ALIGN_CTRL_H
 
-#include "bitmapradio.hpp"
+#include "BitmapRadio.hpp"
 
 class AlignmentControl
     : public BitmapRadioBox
