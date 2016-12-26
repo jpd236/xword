@@ -36,7 +36,7 @@
 // This class will take over the XGridCtrl's event processing
 // for selections.  It must be created on the heap, and it
 // will destroy itself when it is done.
-class GridSelectionHandler : wxEvtHandler
+class GridSelectionHandler : public wxEvtHandler
 {
 public:
     GridSelectionHandler (XGridCtrl & grid);

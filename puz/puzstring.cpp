@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>
+#include <cwctype>
 #include <set>
 
 namespace puz {
@@ -190,7 +191,7 @@ static bool can_encode_puz(unsigned int cp)
     }
 }
 
-PUZ_API bool puz::can_encode_puz(const string_t & str) {
+PUZ_API bool can_encode_puz(const string_t & str) {
     string_t::const_iterator it;
     string_t::const_iterator begin = str.begin();
     string_t::const_iterator end = str.end();
