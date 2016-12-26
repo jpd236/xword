@@ -23,6 +23,7 @@
 #include "utils/minizip.hpp"
 #include <sstream>
 #include "parse/base64.hpp"
+#include <cstring>
 
 namespace puz {
 

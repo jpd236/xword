@@ -1,5 +1,8 @@
 language: cpp
-os: osx
+os:
+  - linux
+  - osx
+dist: bionic
 osx_image: xcode7.3
 
 env:
@@ -9,6 +12,10 @@ env:
   matrix:
     - CONFIGURATION="Debug"
     - CONFIGURATION="Release"
+
+# Install dependencies for Linux builds
+before_install:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get -qq update && sudo apt-get install libgtk-3-dev; fi
 
 install:
   # For tagged builds, use the tag name as the version.
@@ -27,20 +34,21 @@ cache:
 
 # Run premake to create the Xcode project
 before_script:
-  - ./premake5 --wx-config-debug=$HOME/wxWidgets-$WX_VERSION/bin/wx-config --wx-config-release=$HOME/wxWidgets-$WX_VERSION/bin/wx-config xcode4
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./premake5 --wx-config-debug=$HOME/wxWidgets-$WX_VERSION/bin/wx-config --wx-config-release=$HOME/wxWidgets-$WX_VERSION/bin/wx-config xcode4; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then ./premake5-linux --wx-config-debug=$HOME/wxWidgets-$WX_VERSION/bin/wx-config --wx-config-release=$HOME/wxWidgets-$WX_VERSION/bin/wx-config gmake; fi
 
 # Build XWord
 script:
-  - xcodebuild -project build/xcode4/XWord.xcodeproj -configuration "$CONFIGURATION" build
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then xcodebuild -project build/xcode4/XWord.xcodeproj -configuration "$CONFIGURATION" build; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make -C build/gmake config=${CONFIGURATION,,}; fi
 
-# For deployed builds, zip the .app folder
+# For deployed Mac builds, zip the .app folder
 before_deploy:
-  - pushd bin/$CONFIGURATION
-  - zip -r XWord-macOS.zip XWord.app/ -x *.fbp -x "*/scripts/_*" -x "*/scripts/*debug*"
-  - popd
-  - sed -e "s/{VERSION}/${XWORD_VERSION}/" -e "s/{OS_FILE}/XWord-macOS.zip/" dist/packages_template.lua > dist/packages_mac.lua
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pushd bin/$CONFIGURATION && zip -r XWord-macOS.zip XWord.app/ -x *.fbp -x "*/scripts/_*" -x "*/scripts/*debug*" && popd; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then sed -e "s/{VERSION}/${XWORD_VERSION}/" -e "s/{OS_FILE}/XWord-macOS.zip/" dist/packages_template.lua > dist/packages_mac.lua; fi
 
 # Deploy tagged release builds to GitHub Releases
+# TODO(#40): Deployment for Linux.
 deploy:
   provider: releases
   api_key:
@@ -52,4 +60,4 @@ deploy:
   draft: true
   on:
     tags: true
-    condition: $CONFIGURATION = "Release"
+    condition: $TRAVIS_OS_NAME = "osx" && $CONFIGURATION = "Release"
