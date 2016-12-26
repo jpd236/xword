@@ -24,7 +24,7 @@ configuration { "linux", "Debug" }
     							_OPTIONS["wx-config-debug"]))
 
 configuration { "linux", "Release" }
-    buildoptions(string.format("`%s --release --unicode --static --cxxflags`",
+    buildoptions(string.format("`%s --unicode --static --cxxflags`",
     							_OPTIONS["wx-config-release"]))
 
 elseif os.is("macosx") then

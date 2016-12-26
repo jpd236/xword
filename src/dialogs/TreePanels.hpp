@@ -30,7 +30,7 @@
 
 #include "TreeCtrls.hpp"
 #include "PreferencesPanel.hpp"
-#include "MetadataFormat.hpp"
+#include "metadataformat.hpp"
 
 // The base class for all Appearance tree panels
 class AppearanceBase

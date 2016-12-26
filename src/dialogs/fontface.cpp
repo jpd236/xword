@@ -99,7 +99,7 @@ void FontFaceCtrl::SetValue(const wxString & value)
     evt.SetEventObject(this);
     evt.SetId(selection);
     evt.SetString(m_lastFaceName);
-    ProcessCommand(evt);
+    HandleWindowEvent(evt);
 }
 
 
