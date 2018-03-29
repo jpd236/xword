@@ -32,7 +32,19 @@ class MyStatusBar
     : public wxStatusBar
 {
 public:
-    MyStatusBar(wxWindow * parent, wxWindowID id = wxID_ANY, long style = wxST_SIZEGRIP, const wxString& name = _T("statusBar"));
+    MyStatusBar(wxWindow * parent,
+                wxWindowID id = wxID_ANY,
+                // Workaround for https://trac.wxwidgets.org/ticket/18469: wxST_SIZEGRIP is on by
+                // default on Mac and takes up space despite not rendering anything, so disable it
+                // on Mac since Mac apps don't show size grips as of OS X 10.7.
+                long style =
+#ifdef __WXOSX__
+                    0
+#else
+                    wxST_SIZEGRIP
+#endif // __WXOSX__
+                ,
+                const wxString& name = _T("statusBar"));
     ~MyStatusBar() {}
 
     void SetAlert(const wxString & text, const wxColour & bgColor = wxNullColour);
@@ -47,6 +59,10 @@ private:
 
     SizedText * m_alert;
     wxStaticText * m_timer;
+    wxStaticText * m_status;
+#ifdef XWORD_USE_LUA
+    wxStaticText * m_luaErrors;
+#endif
     void OnAlertClick(wxMouseEvent & evt);
     void WrapAlert(int width = -1);
 

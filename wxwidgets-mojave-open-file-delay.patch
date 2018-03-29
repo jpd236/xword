@@ -1,6 +1,6 @@
-diff -Naur wxWidgets-3.1.0-old/src/osx/cocoa/utils.mm wxWidgets-3.1.0/src/osx/cocoa/utils.mm
---- wxWidgets-3.1.0-old/src/osx/cocoa/utils.mm	2016-02-28 13:33:37.000000000 -0800
-+++ wxWidgets-3.1.0/src/osx/cocoa/utils.mm	2019-04-21 13:26:16.000000000 -0700
+diff -Naur wxWidgets-3.1.2-old/src/osx/cocoa/utils.mm wxWidgets-3.1.2/src/osx/cocoa/utils.mm
+--- wxWidgets-3.1.2-old/src/osx/cocoa/utils.mm	2018-12-09 07:40:08.000000000 -0800
++++ wxWidgets-3.1.2/src/osx/cocoa/utils.mm	2019-08-14 22:39:53.000000000 -0700
 @@ -68,6 +68,7 @@
  
  - (void)applicationDidFinishLaunching:(NSNotification *)notification
@@ -9,7 +9,7 @@ diff -Naur wxWidgets-3.1.0-old/src/osx/cocoa/utils.mm wxWidgets-3.1.0/src/osx/co
      wxTheApp->OSXOnDidFinishLaunching();
  }
  
-@@ -323,7 +324,6 @@
+@@ -325,7 +326,6 @@
  // here we subclass NSApplication, for the purpose of being able to override sendEvent.
  @interface wxNSApplication : NSApplication
  {
@@ -17,20 +17,19 @@ diff -Naur wxWidgets-3.1.0-old/src/osx/cocoa/utils.mm wxWidgets-3.1.0/src/osx/co
  }
  
  - (id)init;
-@@ -337,7 +337,7 @@
- - (id)init
+@@ -340,7 +340,7 @@
  {
-     self = [super init];
--    firstPass = YES;
-+    // further init
+     if ( self = [super init] )
+     {
+-        firstPass = YES;
++        // further init
+     }
      return self;
  }
- 
-@@ -366,14 +366,7 @@
-     if ([anEvent type] == NSKeyUp && ([anEvent modifierFlags] & NSCommandKeyMask))
+@@ -371,13 +371,6 @@
          [[self keyWindow] sendEvent:anEvent];
      else
--        [super sendEvent:anEvent];
+         [super sendEvent:anEvent];
 -    
 -    if ( firstPass )
 -    {
@@ -38,11 +37,10 @@ diff -Naur wxWidgets-3.1.0-old/src/osx/cocoa/utils.mm wxWidgets-3.1.0/src/osx/co
 -        firstPass = NO;
 -        return;
 -    }
-+        [super sendEvent:anEvent];    
  }
  
  @end
-@@ -412,12 +405,6 @@
+@@ -416,12 +409,6 @@
          appcontroller = OSXCreateAppController();
          [[NSApplication sharedApplication] setDelegate:(id <NSApplicationDelegate>)appcontroller];
          [NSColor setIgnoresAlpha:NO];
