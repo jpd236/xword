@@ -330,7 +330,8 @@ public:
         // Prevent the property dialog from sizing too tall if m_format has
         // a long string
         m_format->SetInitialSize(wxSize(250, m_format->GetCharHeight() * 7));
-
+        // Since this might be a script, don't let OS X substitute fancy quotes.
+        m_format->OSXEnableAutomaticQuoteSubstitution(false);
         // Use Lua checkbox
         m_useLua = AddConfigControl(new ConfigControl<bool>(meta.useLua));
         m_useLua->SetLabel("Script");

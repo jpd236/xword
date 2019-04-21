@@ -79,14 +79,12 @@ static int LUACALL wxLua_wxHtmlCell_AdjustPagebreak(lua_State *L)
 {
     // int pageHeight
     int pageHeight  = (int)wxlua_getintegertype(L, 4);
-    // wxArrayInt& known_pagebreaks
-    wxArrayInt* known_pagebreaks  = (wxArrayInt *)wxluaT_getuserdatatype(L, 3, wxluatype_wxArrayInt);
     // int * pagebreak
     int pagebreak  = (int)wxlua_getintegertype(L, 2);
     // get this
     wxHtmlCell *self = (wxHtmlCell *)wxluaT_getuserdatatype(L, 1, wxluatype_wxHtmlCell);
     // call AdjustPagebreak
-    bool returns = self->AdjustPagebreak(&pagebreak, *known_pagebreaks, pageHeight);
+    bool returns = self->AdjustPagebreak(&pagebreak, pageHeight);
     // push the result number
     lua_pushboolean(L, returns);
     //
@@ -3951,11 +3949,11 @@ static int LUACALL wxLua_wxHtmlDCRenderer_Render1(lua_State *L)
     // int to = INT_MAX
     int to = (argCount >= 7 ? (int)wxlua_getnumbertype(L, 7) : INT_MAX);
     // int dont_render = false
-    int dont_render = (argCount >= 6 ? (int)wxlua_getnumbertype(L, 6) : false);
+    //int dont_render = (argCount >= 6 ? (int)wxlua_getnumbertype(L, 6) : false);
     // int from = 0
     int from = (argCount >= 5 ? (int)wxlua_getnumbertype(L, 5) : 0);
     // wxArrayInt known_pagebreaks
-    wxArrayInt * known_pagebreaks = (wxArrayInt *)wxluaT_getuserdatatype(L, 4, wxluatype_wxArrayInt);
+    //wxArrayInt * known_pagebreaks = (wxArrayInt *)wxluaT_getuserdatatype(L, 4, wxluatype_wxArrayInt);
     // int y
     int y = (int)wxlua_getnumbertype(L, 3);
     // int x
@@ -3963,7 +3961,9 @@ static int LUACALL wxLua_wxHtmlDCRenderer_Render1(lua_State *L)
     // get this
     wxHtmlDCRenderer * self = (wxHtmlDCRenderer *)wxluaT_getuserdatatype(L, 1, wxluatype_wxHtmlDCRenderer);
     // call Render
-    int returns = (self->Render(x, y, *known_pagebreaks, from, dont_render, to));
+    // FIXME: See https://github.com/wxWidgets/wxWidgets/commit/e01892c6697480654715d0698557bea9b3573621
+    self->Render(x, y, from, to);
+    int returns = 0;
     // push the result number
     lua_pushnumber(L, returns);
 

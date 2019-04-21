@@ -2798,15 +2798,15 @@ MyFrame::OnActivate(wxActivateEvent & evt)
 void
 MyFrame::SetFocusOnIdle(wxIdleEvent & evt)
 {
-    if (m_winLastFocused && m_winLastFocused != wxWindow::FindFocus())
-        m_winLastFocused->SetFocus();
+    //if (m_winLastFocused && m_winLastFocused != wxWindow::FindFocus())
+    //    m_winLastFocused->SetFocus();
     // We need to check again because the previous call to SetFocus()
     // isn't guaranteed to work.
-    if (! m_winLastFocused || m_winLastFocused == wxWindow::FindFocus())
-    {
-        m_isIdleConnected = false;
-        Disconnect(wxEVT_IDLE, wxIdleEventHandler(MyFrame::SetFocusOnIdle));
-    }
+    //if (! m_winLastFocused || m_winLastFocused == wxWindow::FindFocus())
+    //{
+    //    m_isIdleConnected = false;
+    //    Disconnect(wxEVT_IDLE, wxIdleEventHandler(MyFrame::SetFocusOnIdle));
+    //}
     evt.Skip();
 }
 

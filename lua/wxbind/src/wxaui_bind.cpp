@@ -11638,7 +11638,7 @@ static int LUACALL wxLua_wxAuiMDIChildFrame_ApplyMDIChildFrameRect(lua_State *L)
     // get this
     wxAuiMDIChildFrame * self = (wxAuiMDIChildFrame *)wxluaT_getuserdatatype(L, 1, wxluatype_wxAuiMDIChildFrame);
     // call ApplyMDIChildFrameRect
-    self->ApplyMDIChildFrameRect();
+    //self->ApplyMDIChildFrameRect();
 
     return 0;
 }
@@ -11706,7 +11706,7 @@ static int LUACALL wxLua_wxAuiMDIChildFrame_DoShow(lua_State *L)
     // get this
     wxAuiMDIChildFrame * self = (wxAuiMDIChildFrame *)wxluaT_getuserdatatype(L, 1, wxluatype_wxAuiMDIChildFrame);
     // call DoShow
-    self->DoShow(show);
+    self->Show(show);
 
     return 0;
 }
@@ -11722,7 +11722,10 @@ static int LUACALL wxLua_wxAuiMDIChildFrame_GetIcon(lua_State *L)
     // get this
     wxAuiMDIChildFrame * self = (wxAuiMDIChildFrame *)wxluaT_getuserdatatype(L, 1, wxluatype_wxAuiMDIChildFrame);
     // call GetIcon
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Waddress-of-temporary"
     const wxIcon* returns = (const wxIcon*)&self->GetIcon();
+#pragma clang diagnostic pop
     // push the result datatype
     wxluaT_pushuserdatatype(L, returns, wxluatype_wxIcon);
 

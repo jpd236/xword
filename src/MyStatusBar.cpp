@@ -57,15 +57,16 @@ MyStatusBar::MyStatusBar(wxWindow * parent,
 
     SetFieldsCount(STATUS_TOTAL, widths);
 
-    m_alert = new SizedText(this, wxID_ANY);
-    m_alert->SetAlign(wxALIGN_CENTER);
-    m_alert->SetWrapMode(ST_TRUNCATE);
-    m_alert->SetFont(GetFont());
-    m_alert->SetToolTip(_T(""));
-
-    m_alert->Connect(wxEVT_LEFT_DCLICK,
-                 wxMouseEventHandler(MyStatusBar::OnAlertClick),
-                 NULL, this);
+    // HACK: Why does this draw with a gray background instead of a transparent one?
+//    m_alert = new SizedText(this, wxID_ANY);
+//    m_alert->SetAlign(wxALIGN_CENTER);
+//    m_alert->SetWrapMode(ST_TRUNCATE);
+//    m_alert->SetFont(GetFont());
+//    m_alert->SetToolTip(_T(""));
+//
+//    m_alert->Connect(wxEVT_LEFT_DCLICK,
+//                 wxMouseEventHandler(MyStatusBar::OnAlertClick),
+//                 NULL, this);
 
     m_timer = new wxStaticText(this,
                                wxID_ANY,
@@ -97,15 +98,15 @@ void MyStatusBar::SetLuaErrors(int num)
 
 void MyStatusBar::SetAlert(const wxString & text, const wxColour & bgColor)
 {
-    m_alert->SetBackgroundColour(bgColor);
-    long cutoff = wxGetApp().GetConfigManager().Status.brightnessCutoff();
-    if (bgColor == wxNullColour || GetBrightness(bgColor) > cutoff)
-        m_alert->SetForegroundColour(*wxBLACK);
-    else
-        m_alert->SetForegroundColour(*wxWHITE);
-    m_alert->SetToolTip(text);
-    m_alert->SetLabel(text);
-    //WrapAlert();
+//    m_alert->SetBackgroundColour(bgColor);
+//    long cutoff = wxGetApp().GetConfigManager().Status.brightnessCutoff();
+//    if (bgColor == wxNullColour || GetBrightness(bgColor) > cutoff)
+//        m_alert->SetForegroundColour(*wxBLACK);
+//    else
+//        m_alert->SetForegroundColour(*wxWHITE);
+//    m_alert->SetToolTip(text);
+//    m_alert->SetLabel(text);
+//    //WrapAlert();
 }
 
 
@@ -121,12 +122,16 @@ void
 MyStatusBar::OnSize(wxSizeEvent & WXUNUSED(evt))
 {
     wxRect rect;
-    if (GetFieldRect(STATUS_ALERT, rect)) {
-        m_alert->SetSize(rect);
-        //WrapAlert(rect.width);
-    }
+//    if (GetFieldRect(STATUS_ALERT, rect)) {
+//        m_alert->SetSize(rect);
+//        //WrapAlert(rect.width);
+//    }
     if (GetFieldRect(STATUS_TIME, rect)) {
-        m_timer->SetSize(rect);
+        wxRect newRect = rect;
+        // HACK: Why is this necessary? On older wxWidgets the timer was right-aligned
+        // and vertically centered.
+        newRect.Offset(21, 3);
+        m_timer->SetSize(newRect);
     }
 }
 

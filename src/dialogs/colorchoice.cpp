@@ -87,7 +87,7 @@ void ColorChoice::InitColors(ConfigManager * cfg)
 {
     s_colors.clear();
     // Add the "Other..." item
-    s_colors.push_back(wxNullColour, other_color);
+    s_colors.push_back(wxTransparentColour, other_color);
     // Add colors from config
     if (cfg)
     {
