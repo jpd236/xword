@@ -55,6 +55,7 @@
 #define wxLUA_USE_wxCriticalSectionLocker       1
 #define wxLUA_USE_wxDataObject                  1
 #define wxLUA_USE_wxDatePickerCtrl              1
+#define wxLUA_USE_wxTimePickerCtrl              1
 #define wxLUA_USE_wxDateSpan                    1
 #define wxLUA_USE_wxDateTime                    1
 #define wxLUA_USE_wxDateTimeHolidayAuthority    1
@@ -93,7 +94,6 @@
 #define wxLUA_USE_wxID_XXX                      1
 #define wxLUA_USE_wxImage                       1
 #define wxLUA_USE_wxImageList                   1
-#define wxLUA_USE_wxInfoBar                     1
 #define wxLUA_USE_wxJoystick                    1
 #define wxLUA_USE_wxLayoutConstraints           1
 #define wxLUA_USE_wxList                        1
@@ -161,6 +161,7 @@
 #define wxLUA_USE_wxTooltip                     1
 #define wxLUA_USE_wxTreebook                    1
 #define wxLUA_USE_wxTreeCtrl                    1
+#define wxLUA_USE_wxTreeListCtrl                1
 #define wxLUA_USE_wxValidator                   1
 #define wxLUA_USE_wxWave                        1
 #define wxLUA_USE_wxWebView                     1 // must link to lib, also wxUSE_WEBVIEW
