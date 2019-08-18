@@ -714,6 +714,7 @@ MyFrame::ShowPuzzle(bool update)
     {
         EnableTools(false);
         m_cluePrompt->Clear();
+        m_status->SetAlert("");
     }
     EnableSave(false);
 
