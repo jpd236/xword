@@ -67,11 +67,11 @@ local function convert(filename, writefile, luafile)
     local text = f:read('*a')
     f:close()
 
-    -- Calculate the checksum of the original text
-    local md5sum = md5.sumhexa(text)
-
     -- Use unix newlines
     text = text:gsub('\r\n', '\n')
+
+    -- Calculate the checksum of the original text (with normalized newlines)
+    local md5sum = md5.sumhexa(text)
 
     -- Remove coding
     text = text:gsub('#.-coding:.-\n', '\n')
@@ -222,15 +222,14 @@ local function convert(filename, writefile, luafile)
             luafile = filename:gsub('%.py', '%.lua')
         end
         f = io.open(luafile, 'wb')
-        -- Keep track of filename and modification time
+        -- Keep track of filename and md5sum
         f:write(([[
 -- Converted from python by py2lua
 -- python file: %s
--- modtime: %s
 -- md5sum: %s
 -- ----------------------------------
 
-]]):format(path.basename(filename), path.getmtime(filename), md5sum))
+]]):format(path.basename(filename), md5sum))
         -- Write converted text
         f:write(text)
         f:close()
@@ -325,26 +324,18 @@ local function is_modified(luafile)
     if f then
         f:read("*line") -- py2lua line
         local pyfile = f:read("*line"):match("--.*:%s+(.*%.py)") -- python file
-        local mtime = tonumber(f:read("*line"):match("--.*:%s+(%d*)")) -- modified time
         local md5sum = f:read("*line"):match("--.*:%s+(%x*)") -- md5sum
         f:close()
-        if pyfile and mtime and md5sum then
+        if pyfile and md5sum then
             -- Get the full path of the python file
             pyfile = path.join(path.dirname(luafile), pyfile)
-            -- Compare modification times
-            if path.getmtime(pyfile) > mtime then
-                -- Compare md5sums (in case the mtime changed but the file is the same)
-                local pyf = assert(io.open(pyfile, 'r'))
-                local text = pyf:read('*a')
-                pyf:close()
-                local pymd5sum = md5.sumhexa(text)
-                if md5sum ~= pymd5sum then
-                    return true, pyfile
-                else
-                    -- Touch the py file to skip future md5 checks until the file changes
-                    lfs.touch(pyfile)
-                    return false
-                end
+            -- Compare md5sums (after normalizing newlines)
+            local pyf = assert(io.open(pyfile, 'r'))
+            local text = pyf:read('*a'):gsub('\r\n', '\n')
+            pyf:close()
+            local pymd5sum = md5.sumhexa(text)
+            if md5sum ~= pymd5sum then
+                return true, pyfile
             else
                 return false
             end

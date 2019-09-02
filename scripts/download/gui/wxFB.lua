@@ -1,7 +1,6 @@
 -- Converted from python by py2lua
 -- python file: wxFB.py
--- modtime: 1566143611
--- md5sum: e8d8688939dcae7d93e07715d771c758
+-- md5sum: de54b267415b7d3447e3b016eacf415c
 -- ----------------------------------
 
 local wxfb = {} -- Table to hold classes
