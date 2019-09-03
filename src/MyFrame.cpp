@@ -172,6 +172,8 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
 
     EVT_MENU_RANGE     (ID_FILE_HISTORY_1,
                         ID_FILE_HISTORY_1 + 10, MyFrame::OnOpenRecentPuzzle)
+
+    EVT_ICONIZE        (                      MyFrame::OnIconize)
 END_EVENT_TABLE()
 
 // This function is here instead of with the rest of the MyFrame implementation
@@ -2498,7 +2500,7 @@ MyFrame::OnTimerNotify(wxTimerEvent & WXUNUSED(evt))
     // Check to see if somebody is active.
     // Calling SetPaused is already done in OnApp(De)Activate, but in case that
     // doesn't work, we'll do it here too.
-    if (wxGetApp().IsActive())
+    if (wxGetApp().IsActive() && !IsIconized())
     {
         SetTime(m_time+1);
         m_XGridCtrl->SetPaused(false);
@@ -2965,6 +2967,16 @@ void
 MyFrame::OnLinkClicked(wxHtmlLinkEvent & evt)
 {
     wxLaunchDefaultBrowser(evt.GetLinkInfo().GetHref());
+}
+
+void
+MyFrame::OnIconize(wxIconizeEvent & evt)
+{
+    if (evt.IsIconized()) {
+        OnAppDeactivate();
+    } else {
+        OnAppActivate();
+    }
 }
 
 
