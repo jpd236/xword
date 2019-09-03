@@ -2520,8 +2520,15 @@ static const struct luaL_Reg bitlib[] = {
 };
 
 int LUACALL luaopen_bit (lua_State *L) {
-  wxLuaState::luaL_Register(L, "bit", bitlib);
-  lua_pushnumber(L, BIT_BITS);
-  lua_setfield(L, -2, "bits");
-  return 1;
+  // LOCAL MODIFICATION FOR XWORD
+  // This 'bit' implementation breaks the md5 module on OS X because it
+  // returns unsigned integers instead of signed ones.
+  // Leave it out and use LuaJIT's built-in implementation instead.
+
+  //wxLuaState::luaL_Register(L, "bit", bitlib);
+  //lua_pushnumber(L, BIT_BITS);
+  //lua_setfield(L, -2, "bits");
+  //return 1;
+
+  return 0;
 }
