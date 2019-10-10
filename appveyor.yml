@@ -118,7 +118,7 @@ for:
 deploy:
   provider: GitHub
   auth_token:
-    secure: aJXXCw0P5Y9PVfpVn77TUhQjXClQdNq/ZBb0c2diQ9Eqqni0g0yMHEzDFhTCVRT4
+    secure: dbbuSy0dB6OWRF3Dsf/G86/lT22WdRv8KUzZKzNxdXZzzWZWNDd7U1HoEtCHrUk4 
   artifact: XWord-Windows.exe,packages_windows.lua,XWord-macOS.zip,packages_mac.lua
   draft: true
   on:
