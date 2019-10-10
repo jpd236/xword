@@ -20,6 +20,9 @@ WX_CONFIGURE_FLAGS="\
 if [[ "$OSTYPE" == "darwin"* ]]; then
   WX_CONFIGURE_FLAGS="$WX_CONFIGURE_FLAGS \
     --with-macosx-version-min=10.7 \
+    --with-libpng=builtin \
+    --with-libjpeg=builtin \
+    --with-libtiff=builtin \
     CFLAGS=-fvisibility-inlines-hidden \
     CXXFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
     CPPFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
