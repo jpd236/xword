@@ -55,9 +55,7 @@ if [ ! -d "$INSTALL_PATH/lib" ]; then
   tar -xjf wxWidgets-$WX_VERSION.tar.bz2
   cd wxWidgets-$WX_VERSION
   patch -p1 -i ../wxaui-tweaks.patch
-  patch -p1 -i ../wxwidgets-mojave-open-file-delay.patch
-  patch -p1 -i ../wxwidgets-setBackgroundColour-wxNullColour.patch
-  patch -p1 -i ../wxwidgets-mac-toolbar-background.patch
+  patch -p1 -i ../wxWidgets-osx-private-build-fix.patch
   eval $BUILD_COMMAND
 else
   echo "Using cached directory."
