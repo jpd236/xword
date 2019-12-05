@@ -27,7 +27,7 @@ solution "XWord"
     -- --------------------------------------------------------------------
     configuration "Release"
         defines { "NDEBUG" }
-        flags { "Optimize" }
+        optimize "On"
         libdirs { "bin/Release" }
         if not _OPTIONS["disable-lua"] then
             libdirs { "lib/Release" }
@@ -35,7 +35,7 @@ solution "XWord"
 
     configuration "Debug"
         defines { "DEBUG", "_DEBUG" }
-        flags { "Symbols" }
+        symbols "On"
         libdirs { "bin/Debug" }
         if not _OPTIONS["disable-lua"] then
             libdirs { "lib/Debug" }
@@ -45,6 +45,7 @@ solution "XWord"
     -- Platform-specific
     -- --------------------------------------------------------------------
     configuration "windows"
+        architecture "x32"
         defines { "WIN32", "_WINDOWS" }
         prebuildcommands {
             [[if not exist "..\..\bin\$(ConfigurationName)" mkdir "..\..\bin\$(ConfigurationName)"]],
@@ -53,8 +54,12 @@ solution "XWord"
         }
 
     configuration "macosx"
+        architecture "x64"
         buildoptions { "-mmacosx-version-min=10.7", "-stdlib=libc++" }
         linkoptions  { "-mmacosx-version-min=10.7", "-stdlib=libc++", "-L/usr/local/lib" }
+
+    configuration "linux"
+        architecture "x64"
 
     -- ------------------------------------------------------------------------
     -- General
@@ -71,7 +76,7 @@ solution "XWord"
 
 
 -- Mac stuff
-if os.is("macosx") then
+if os.istarget("macosx") then
     -- Find a value in project.blocks
     local function get_key(p, k)
         if p[k] then return p[k] end
@@ -81,7 +86,7 @@ if os.is("macosx") then
             end
         end
     end
-    
+
     for _, p in pairs(solution().projects) do
     	-- Put shared libs in XWord.app/Contents/Frameworks
         if get_key(p, "kind") == "SharedLib" then
@@ -105,4 +110,3 @@ if os.is("macosx") then
         end
     end
 end
-

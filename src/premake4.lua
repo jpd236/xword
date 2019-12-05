@@ -9,7 +9,7 @@ project "XWord"
 
     configuration "windows"
         -- Use WinMain() instead of main() for windows apps
-        flags { "WinMain" }
+        entrypoint "WinMainCRTStartup"
 
     configuration "macosx"
         files { "**.mm" }
