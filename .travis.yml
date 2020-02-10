@@ -37,7 +37,7 @@ script:
 
 # For deployed Mac builds, zip the .app folder
 before_deploy:
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pushd bin/$CONFIGURATION && zip -r XWord-macOS.zip XWord.app/ -x *.fbp && popd; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pushd bin/$CONFIGURATION && zip -r XWord-macOS.zip XWord.app/ -x *.fbp -x "*/scripts/_*" -x "*/scripts/*debug*" && popd; fi
 
 # Deploy tagged release builds to GitHub Releases
 # TODO(#40): Deployment for Linux.
