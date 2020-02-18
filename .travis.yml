@@ -41,6 +41,7 @@ script:
 # For deployed Mac builds, zip the .app folder
 before_deploy:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pushd bin/$CONFIGURATION && zip -r XWord-macOS.zip XWord.app/ -x *.fbp -x "*/scripts/_*" -x "*/scripts/*debug*" && popd; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then sed -e "s/{VERSION}/${XWORD_VERSION}/" -e "s/{OS_FILE}/XWord-macOS.zip/" dist/packages_template.lua > dist/packages_mac.lua; fi
 
 # Deploy tagged release builds to GitHub Releases
 # TODO(#40): Deployment for Linux.
