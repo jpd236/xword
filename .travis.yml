@@ -41,6 +41,7 @@ script:
 # For deployed Mac builds, zip the .app folder
 before_deploy:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pushd bin/$CONFIGURATION && zip -r XWord-macOS.zip XWord.app/ -x *.fbp -x "*/scripts/_*" -x "*/scripts/*debug*" && popd; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then sed -e "s/{VERSION}/${XWORD_VERSION}/" -e "s/{OS_FILE}/XWord-macOS.zip/" dist/packages_template.lua > dist/packages_mac.lua; fi
 
 # Deploy tagged release builds to GitHub Releases
 # TODO(#40): Deployment for Linux.
@@ -48,7 +49,9 @@ deploy:
   provider: releases
   api_key:
     secure: SAIRYZABLK3ZLwBdtAkQ5U3UiOCL9TyH4ryfSkaz/Y2VnFcOX/sUJFvXHWnOVLQ8rIoSzINUSPz4++QxOzt3Dl0Ae0THwNYHr58zu9t242KISGYa9DE3yR9ef7bkTj29xuPZTnvAAEirxBbaJNeI//jXfiwJsmzRDVvL7/VlL49OOsmZhW/berMbsF9fo/wcmlDaL1v6e2ak0jph78F4P4z75H08SdJis4Ymg7a6nC8xmONeaf2zFauLHGAhTuDZiavj0jfdOlg4ePA0uAHAz7Y9gIy2NHQV9pt8kLwehvK0o8k2YTRECX9LCg+S3G5YPBC2Q8Flpc8drPbxJcZbGL7Rr991zLExUVGuRFGFSGxbJ3J0VfEBZ3J5CqPL80j3bZTLoKzg3UyGfYGbZBbzBue2h4qXzzVuzyFXBSvr1QF0mLE+pGt+2qQgFsg4AEwSkSha86z6kILHz7PE+PxKHJchpCwDP4yPKSFa9V5bENxpPd50cggRNYB0nolQQoUAOYFEAlbJ+cqS85QTXzP8Wb8e1VrSc8VXKrkG+G0jJzEo9/+2RCPLaSx4obzrQ/ZhzmNJ+RUHpW0oFJgaKosBIYXQOmlu2yv4sJmsKHHod2tC9e8SWAAtwKdyxUYFOfdFroxh/fmiPkLs118NhN6r31nEYilUimpjPmqmNJKZJCg=
-  file: bin/$CONFIGURATION/XWord-macOS.zip
+  file:
+    - bin/$CONFIGURATION/XWord-macOS.zip
+    - dist/packages_mac.lua
   skip_cleanup: true
   on:
     tags: true
