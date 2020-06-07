@@ -478,9 +478,12 @@ XGridCtrl::DrawGrid(wxDC & dc, const wxRegion & updateRegion)
     puz::Square * square;
 
     // If we don't have an update region, redraw all squares
-    if (updateRegion.IsEmpty())
+    if (updateRegion.IsEmpty()) {
+        wxLogDebug("Redrawing all squares");
         for (square = m_grid->First(); square != NULL; square = square->Next())
             DrawSquare(dc, *square);
+    }
+
 
     // If we do have an update region, redraw all squares within the region
     else
@@ -488,6 +491,7 @@ XGridCtrl::DrawGrid(wxDC & dc, const wxRegion & updateRegion)
         // Just deal with the update rect, not region
         // it's easier and faster.
         wxRect rect = updateRegion.GetBox();
+        wxLogDebug("Redrawing rect width = %d, height = %d", rect.GetWidth(), rect.GetHeight());
         if (rect.IsEmpty())
             return;
 
