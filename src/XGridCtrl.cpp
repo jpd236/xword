@@ -32,6 +32,8 @@
 #include "utils/timeit.hpp"
 #include "puz/Puzzle.hpp"
 
+wxDEFINE_EVENT(EVT_CLOSEREBUS, wxCommandEvent);
+
 // This class will take over the XGridCtrl's event processing
 // for selections.  It must be created on the heap, and it
 // will destroy itself when it is done.
@@ -1286,6 +1288,7 @@ XGridCtrl::ConnectEvents()
         Bind(wxEVT_LEFT_DOWN, &XGridCtrl::OnLeftDown, this);
         Bind(wxEVT_RIGHT_DOWN, &XGridCtrl::OnRightDown, this);
         Bind(wxEVT_MOTION, &XGridCtrl::OnMouseMove, this);
+        Bind(EVT_CLOSEREBUS, &XGridCtrl::ReallyEndRebusEntry, this);
     }
     m_areEventsConnected = true;
 }
@@ -1301,7 +1304,7 @@ XGridCtrl::DisconnectEvents()
         Unbind(wxEVT_LEFT_DOWN, &XGridCtrl::OnLeftDown, this);
         Unbind(wxEVT_RIGHT_DOWN, &XGridCtrl::OnRightDown, this);
         Unbind(wxEVT_MOTION, &XGridCtrl::OnMouseMove, this);
-
+        Unbind(EVT_CLOSEREBUS, &XGridCtrl::ReallyEndRebusEntry, this);
     }
     m_areEventsConnected = false;
 }
@@ -1792,6 +1795,15 @@ XGridCtrl::StartRebusEntry()
 void
 XGridCtrl::EndRebusEntry(bool success)
 {
+    wxCommandEvent event(EVT_CLOSEREBUS);
+    event.SetInt(success);
+    wxPostEvent(this, event);
+}
+
+void
+XGridCtrl::ReallyEndRebusEntry(wxCommandEvent & evt)
+{
+    bool success = evt.GetInt();
     if (! m_rebusCtrl)
         return;
 

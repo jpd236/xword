@@ -30,6 +30,7 @@
 #include "puz/Word.hpp"
 #include "XGridDrawer.hpp"
 
+wxDECLARE_EVENT(EVT_CLOSEREBUS, wxCommandEvent);
 
 // For checking grid squares
 enum
@@ -425,6 +426,7 @@ private:
     void OnMouseMove   (wxMouseEvent & evt);
     void OnKeyDown     (wxKeyEvent & evt);
     void OnChar        (wxKeyEvent & evt);
+    void ReallyEndRebusEntry(wxCommandEvent & event);
 
     void OnLetter       (wxChar key, int mod);
     void MoveAfterLetter();
