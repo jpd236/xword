@@ -909,12 +909,13 @@ MyFrame::ShowClues()
         puz::Clues::iterator it;
         for (it = m_puz.GetClues().begin() ; it != m_puz.GetClues().end(); ++it)
         {
-            wxString label = puz2wx(it->first);
+            wxString direction = puz2wx(it->first);
+            wxString label = puz2wx(it->second.GetTitle());
             // Name the pane
             wxString id;
-            if (label == _T("Across"))
+            if (direction == _T("Across"))
                 id = _T("ClueList1");
-            else if (label == _T("Down"))
+            else if (direction == _T("Down"))
                 id = _T("ClueList2");
             else
                 id = wxString::Format(_T("ClueList%d"), cluelist_id++);
@@ -945,9 +946,9 @@ MyFrame::ShowClues()
             clues->SetClueList(&it->second);
             if (no_clues)
                 clues->ClearClueList();
-            else if (label == _T("Across") && m_toolMgr.IsChecked(ID_DOWNS_ONLY))
+            else if (direction == _T("Across") && m_toolMgr.IsChecked(ID_DOWNS_ONLY))
                 clues->ClearClueList();
-            m_clues[label] = clues;
+            m_clues[direction] = clues;
         }
     }
 
@@ -2797,9 +2798,9 @@ MyFrame::UpdateClues()
             // Figure out if this clue is focused or crossing
             const bool is_focused =
                 (direction == puz::ACROSS &&
-                 cluelist.GetTitle() == puzT("Across")) ||
+                 it->first == puzT("Across")) ||
                 (direction == puz::DOWN &&
-                 cluelist.GetTitle() == puzT("Down"));
+                 it->first == puzT("Down"));
 
             // Find the clue
             for (clues_it = cluelist.begin(); clues_it != cluelist.end(); ++clues_it)
