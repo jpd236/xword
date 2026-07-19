@@ -147,11 +147,11 @@ project "XWord"
     configuration { "macosx" }
         postbuildcommands {
             "cd $TARGET_BUILD_DIR",
-            -- Symlink images and scripts
+            -- Copy images and scripts
             "mkdir -p $PLUGINS_FOLDER_PATH",
-            "ln -sFh ../../../../../scripts $PLUGINS_FOLDER_PATH/scripts",
+            "cp -R ../../scripts $PLUGINS_FOLDER_PATH/scripts",
             "mkdir -p $UNLOCALIZED_RESOURCES_FOLDER_PATH",
-            "ln -sFh ../../../../../images $UNLOCALIZED_RESOURCES_FOLDER_PATH/images",
+            "cp -R ../../images $UNLOCALIZED_RESOURCES_FOLDER_PATH/images",
             -- Copy Info.plist, xword.icns, and default_config.ini
             "sed 's/{XWORD_VERSION}/"..xword_version.."/' ../../src/Info.plist > $INFOPLIST_PATH",
             "cp ../../images/xword.icns $UNLOCALIZED_RESOURCES_FOLDER_PATH",

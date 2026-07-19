@@ -11,7 +11,8 @@ configuration:
 
 environment:
   WX_VERSION: 3.1.5
-  LUAJIT_VERSION: 2.0.5
+  # v2.1 as of 2026-06-17
+  LUAJIT_VERSION: 3c4f9fe2052b8d08a917ac0d5f38563f0297b5a3
 
 for:
 -
@@ -77,6 +78,9 @@ for:
     only:
       - image: macOS
 
+  init:
+    - sudo xcode-select -s /Applications/Xcode-13.4.1.app
+
   install:
     # For tagged builds, use the tag name as the version.
     # Otherwise, read the version from the VERSION file.
@@ -88,23 +92,26 @@ for:
 
   # Cache the compiled libraries so they can be used with future builds
   cache:
-    - $HOME/wxWidgets-$WX_VERSION
+    - $HOME/wxWidgets-$WX_VERSION-universal
     - $HOME/LuaJIT-$LUAJIT_VERSION
 
   # Run premake to create the Xcode project
   before_build:
-    - ./premake5 --wx-config-debug=$HOME/wxWidgets-$WX_VERSION/bin/wx-config --wx-config-release=$HOME/wxWidgets-$WX_VERSION/bin/wx-config xcode4
+    - ./premake5 --wx-config-debug=$HOME/wxWidgets-$WX_VERSION-universal/bin/wx-config --wx-config-release=$HOME/wxWidgets-$WX_VERSION-universal/bin/wx-config xcode4
 
   # Build XWord
   build_script:
-    - sudo xcode-select -s /Applications/Xcode-13.4.1.app
     - xcodebuild -project build/xcode4/XWord.xcodeproj -configuration "$CONFIGURATION" build
     - if [ "$CONFIGURATION" == "Release" ]; then sed -e "s/{VERSION}/${XWORD_VERSION}/" -e "s/{OS_FILE}/XWord-macOS.zip/" dist/packages_template.lua > dist/packages_mac.lua; fi
 
-  # Zip the full build folder and make it available as an artifact.
+  # Sign and zip the full build folder and make it available as an artifact.
   after_build:
     - pushd bin/$CONFIGURATION
-    - zip -r XWord-macOS.zip XWord.app/ -x *.fbp -x "*/scripts/_*" -x "*/scripts/*debug*"
+    - find XWord.app/ -name "*.fbp" -delete
+    - find XWord.app/ -path "*/scripts/_*" -delete
+    - find XWord.app/ -path "*/scripts/*debug*" -delete
+    - codesign --force --deep -s - XWord.app
+    - ditto -c -k --sequesterRsrc --keepParent XWord.app XWord-macOS.zip
     - popd
 
   artifacts:

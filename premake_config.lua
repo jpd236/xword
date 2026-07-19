@@ -43,6 +43,7 @@ end
 -- Return output of the given command stripped of extra whitespace
 function cmd(command_text)
     local text = os.outputof(command_text)
+    if not text then return "" end
     -- split text
     local t = {}
     for word in text:gmatch("%S+") do

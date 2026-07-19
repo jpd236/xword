@@ -55,7 +55,7 @@ solution "XWord"
         }
 
     configuration "macosx"
-        architecture "x64"
+        architecture "universal"
         systemversion "10.10"
         buildoptions { "-stdlib=libc++" }
         linkoptions  { "-stdlib=libc++", "-L/usr/local/lib" }
@@ -68,6 +68,11 @@ solution "XWord"
     -- ------------------------------------------------------------------------
 
     configuration {}
+
+    xcodebuildsettings {
+        ["ARCHS"] = "x86_64 arm64",
+        ["ONLY_ACTIVE_ARCH"] = "NO"
+    }
 
     include "src" -- the XWord premake file
     include "puz" -- the puzzle library
@@ -104,12 +109,6 @@ if os.istarget("macosx") then
                 linkoptions{ "-install_name @executable_path/../Frameworks/lib"..(get_key(p, "targetname") or p.name)..".dylib" }
         elseif get_key(p, "kind") == "WindowedApp" then
             project(p.name)
-                if not _OPTIONS["disable-lua"] then
-                    -- Requirement for 64-bit OS X applications linking against LuaJIT.
-                    -- See http://luajit.org/install.html
-                    configuration { "macosx" }
-                        linkoptions { "-pagezero_size 10000 -image_base 100000000" }
-                end
         end
     end
 end
