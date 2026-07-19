@@ -12,6 +12,11 @@ if [[ -z "$WX_VERSION" ]]; then
 fi
 
 INSTALL_PATH="$HOME/wxWidgets-$WX_VERSION"
+# Suffix the macOS installation path to bust the non-universal cached build.
+# TODO: Remove once WX_VERSION is bumped to a new version.
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  INSTALL_PATH="${INSTALL_PATH}-universal"
+fi
 mkdir -p $INSTALL_PATH
 
 WX_CONFIGURE_FLAGS="\
@@ -19,17 +24,15 @@ WX_CONFIGURE_FLAGS="\
   --enable-compat28"
 if [[ "$OSTYPE" == "darwin"* ]]; then
   WX_CONFIGURE_FLAGS="$WX_CONFIGURE_FLAGS \
+    --enable-universal_binary=x86_64,arm64 \
     --with-macosx-version-min=10.10 \
-    --with-libpng=builtin \
-    --with-libjpeg=builtin \
-    --with-libtiff=builtin \
-    --with-liblzma=builtin \
-    CFLAGS=-fvisibility-inlines-hidden \
+    --disable-sys-libs \
+    CFLAGS='-fvisibility-inlines-hidden' \
     CXXFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
     CPPFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
-    OBJCFLAGS=-fvisibility-inlines-hidden \
+    OBJCFLAGS='-fvisibility-inlines-hidden' \
     OBJCXXFLAGS='-fvisibility-inlines-hidden -stdlib=libc++' \
-    LDFLAGS=-stdlib=libc++"
+    LDFLAGS='-stdlib=libc++'"
 fi
 WX_MAKE_FLAGS="SHARED=0"
 

@@ -16,7 +16,15 @@ mkdir -p $INSTALL_PATH
 echo "Building LuaJIT version $LUAJIT_VERSION"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  BUILD_COMMAND="make MACOSX_DEPLOYMENT_TARGET=10.10 CC='gcc -arch x86_64'"
+  BUILD_COMMAND="export MACOSX_DEPLOYMENT_TARGET=10.10 && \
+                 make clean && \
+                 make CC='clang -arch x86_64' && \
+                 mv libluajit.a libluajit-x86_64.a && \
+                 export MACOSX_DEPLOYMENT_TARGET=10.10 && \
+                 make clean && \
+                 make CC='clang -arch arm64' HOST_CC='clang' && \
+                 mv libluajit.a libluajit-arm64.a && \
+                 lipo -create -output libluajit.a libluajit-x86_64.a libluajit-arm64.a"
   INSTALL_COMMAND="cp libluajit.a $INSTALL_PATH/lib/liblua51.a"
   LIBS_DIR="macosx"
 elif [[ "$OSTYPE" == "linux"* ]]; then
@@ -31,8 +39,10 @@ fi
 
 # Check to see if the cache directory is empty
 if [ ! -d "$INSTALL_PATH/lib" ]; then
-  git clone -b v$LUAJIT_VERSION --depth 1 https://github.com/LuaJIT/LuaJIT.git
-  cd LuaJIT/src
+  git clone https://github.com/LuaJIT/LuaJIT.git
+  cd LuaJIT
+  git checkout $LUAJIT_VERSION
+  cd src
   eval $BUILD_COMMAND
   mkdir -p $INSTALL_PATH/lib
   eval $INSTALL_COMMAND
