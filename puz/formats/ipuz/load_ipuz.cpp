@@ -18,6 +18,7 @@
 #include "ipuz.hpp"
 
 #include <sstream>
+#include <algorithm>
 #include "Puzzle.hpp"
 #include "puzstring.hpp"
 #include "parse/json.hpp"
@@ -247,6 +248,121 @@ bool AnyCellIsInvalid(Grid& grid, json::Map* cluelists, int offset) {
     return false;
 }
 
+static void ParseSolutionValues(
+    json::Value * val,
+    const string_t & direction,
+    std::vector<Square::SolutionEntry> & entries,
+    bool & isBlock,
+    const string_t & block_str,
+    const string_t & empty_str)
+{
+    if (! val || val->IsNull() || isBlock)
+        return;
+
+    if (val->IsSimple())
+    {
+        string_t s = val->AsString();
+        if (s == block_str)
+            isBlock = true;
+        else if (s != empty_str && ! s.empty())
+            entries.push_back(Square::SolutionEntry(s, direction));
+    }
+    else if (val->IsArray())
+    {
+        json::Array * arr = val->AsArray();
+        for (json::Array::iterator it = arr->begin(); it != arr->end() && ! isBlock; ++it)
+            ParseSolutionValues(*it, direction, entries, isBlock, block_str, empty_str);
+    }
+}
+
+static void ParseSolutionCell(
+    json::Value * cell,
+    Square & square,
+    const string_t & block_str,
+    const string_t & empty_str)
+{
+    if (! cell || cell->IsNull())
+        return;
+
+    if (cell->IsMap())
+    {
+        json::Map * map = cell->AsMap();
+        std::vector<Square::SolutionEntry> entries;
+        bool isBlock = false;
+        bool hasExplicitCanonical = false;
+        string_t explicitCanonical;
+
+        // 1. Check for "value" key (non-directional / default canonical)
+        if (map->Contains(puzT("value")))
+        {
+            hasExplicitCanonical = true;
+            json::Value * valObj = map->Get(puzT("value"));
+            ParseSolutionValues(valObj, puzT(""), entries, isBlock, block_str, empty_str);
+            if (isBlock)
+            {
+                square.SetSolution(square.Black);
+                return;
+            }
+            if (! entries.empty())
+                explicitCanonical = entries[0].value;
+            else
+            {
+                entries.push_back(Square::SolutionEntry(puzT(""), puzT("")));
+                explicitCanonical = puzT("");
+            }
+        }
+
+        // 2. Check for directional keys
+        for (json::Map::iterator it = map->begin(); it != map->end(); ++it)
+        {
+            const string_t & key = it->first;
+            if (key == puzT("value") || key == puzT("style"))
+                continue;
+
+            ParseSolutionValues(it->second, key, entries, isBlock, block_str, empty_str);
+            if (isBlock)
+            {
+                square.SetSolution(square.Black);
+                return;
+            }
+        }
+
+        // 3. Set square solutions
+        if (! entries.empty())
+        {
+            if (entries.size() == 1 && entries[0].direction.empty() && ! hasExplicitCanonical)
+                square.SetSolution(entries[0].value);
+            else if (hasExplicitCanonical)
+                square.SetSolutions(entries, explicitCanonical);
+            else
+                square.SetSolutions(entries);
+        }
+        else if (hasExplicitCanonical)
+        {
+            square.SetSolution(explicitCanonical);
+        }
+    }
+    else
+    {
+        // Simple value or array
+        std::vector<Square::SolutionEntry> entries;
+        bool isBlock = false;
+        ParseSolutionValues(cell, puzT(""), entries, isBlock, block_str, empty_str);
+        if (isBlock)
+        {
+            square.SetSolution(square.Black);
+        }
+        else if (entries.size() == 1)
+        {
+            square.SetSolution(entries[0].value);
+        }
+        else if (! entries.empty())
+        {
+            square.SetSolutions(entries);
+        }
+    }
+}
+
 bool ipuzParser::DoLoadPuzzle(Puzzle * puz, json::Value * root)
 {
     json::Map * doc = root->AsMap();
@@ -371,18 +487,7 @@ bool ipuzParser::DoLoadPuzzle(Puzzle * puz, json::Value * root)
     {
         GRID_FOREACH(doc->GetArray(puzT("solution")),
         {
-            if (! cell->IsNull())
-            {
-                string_t val;
-                if (! cell->IsMap())
-                    val = cell->AsString();
-                else
-                    val = cell->AsMap()->GetString(puzT("value"), empty_str);
-                if (val == block_str)
-                    square.SetSolution(square.Black);
-                else if (val != empty_str)
-                    square.SetSolution(val);
-            }
+            ParseSolutionCell(cell, square, block_str, empty_str);
         });
     }
     else

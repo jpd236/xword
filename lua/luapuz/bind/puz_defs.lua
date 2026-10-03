@@ -114,6 +114,8 @@ class{"Square", header="puz/Square.hpp"}
     func{"SetSolutionSymbol", arg("int", "symbol"), throws=true}
     func{"HasSolutionRebus", returns="bool"}
     func{"HasSolutionSymbol", returns="bool"}
+    func{"HasMultipleSolutions", returns="bool"}
+    func{"HasOnlyDirectionalSolutions", returns="bool"}
 
     func{"Check", returns="bool", arg("bool", "checkBlank", "false"),
                                   arg("bool", "strictRebus", "false") }
@@ -269,7 +271,7 @@ class{"Puzzle", header="puz/Puzzle.hpp", cppheader="luapuz_puz_Puzzle_helpers.hp
     func{"Load", override=overrides.Puzzle_Load}
     func{"Save", override=overrides.Puzzle_Save}
 
-    func{"LoadIpuzString", arg("const char *", "data")}
+    func{"LoadIpuzString", arg("const char *", "data"), throws=true}
 
     func{"CanLoad", static=true, returns="bool", arg("const char *", "filename")}
     func{"CanSave", static=true, returns="bool", arg("const char *", "filename")}

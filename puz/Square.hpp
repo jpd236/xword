@@ -202,6 +202,7 @@ public:
 
     // Text and Solution are guaranteed not to be empty.
     const string_t & GetText()     const { return m_text; }
+    // Returns the canonical solution (for revealing, display, and export)
     const string_t & GetSolution() const { return m_solution; }
 
     void SetText    (const string_t & text, bool propagate = true);
@@ -213,6 +214,32 @@ public:
 
     void SetBlack() { SetSolution(Black); }
 
+    struct SolutionEntry
+    {
+        string_t value;
+        string_t direction; // empty if non-directional / default value
+
+        SolutionEntry() {}
+        SolutionEntry(const string_t & v, const string_t & d = puzT("")) : value(v), direction(d) {}
+    };
+
+    // Sets multiple/directional solutions, auto-deriving the canonical solution from the entries:
+    // - If all entries have directions, entries for each unique direction are joined with "/"
+    // - Otherwise, the first entry's value is used.
+    void SetSolutions(const std::vector<SolutionEntry> & solutions);
+
+    // Sets multiple/directional solutions with an explicit canonical solution (which may be empty/blank).
+    void SetSolutions(const std::vector<SolutionEntry> & solutions, const string_t & canonical);
+    void ClearSolutions();
+    const std::vector<SolutionEntry> & GetSolutions() const { return m_solutions; }
+    bool HasMultipleSolutions() const { return ! m_solutions.empty(); }
+    bool HasOnlyDirectionalSolutions() const;
+
+private:
+    static bool HasOnlyDirectionalSolutions(const std::vector<SolutionEntry> & solutions);
+    static string_t DeriveCanonicalSolution(const std::vector<SolutionEntry> & solutions);
+
+public:
     bool Check(bool checkBlank = false, bool strictRebus = false) const;
 
     char GetPlainText()     const { return ToPlain(m_text); }
@@ -381,6 +408,7 @@ protected:
     string_t m_solution;
     string_t m_text;
     char m_asciiSolution;
+    std::vector<SolutionEntry> m_solutions;
 
     // Clue
     string_t m_number;

@@ -17,8 +17,10 @@
 
 
 #include <cwctype>
+#include <algorithm>
 #include "Square.hpp"
 #include "Grid.hpp"
+#include "puzstring.hpp"
 
 #include <cstring>
 
@@ -64,7 +66,8 @@ Square::Square(const Square & other)
       m_number(other.m_number),
       m_red(other.m_red),
       m_green(other.m_green),
-      m_blue(other.m_blue)
+      m_blue(other.m_blue),
+      m_solutions(other.m_solutions)
 {
     m_next = SquareDirectionMap(m_next);
     std::memcpy(m_bars, other.m_bars, 4 * sizeof(bool));
@@ -79,6 +82,7 @@ Square & Square::operator=(const Square & other)
 {
     m_asciiSolution = other.m_asciiSolution;
     m_solution = other.m_solution;
+    m_solutions = other.m_solutions;
     m_text = other.m_text;
     m_flag = other.m_flag;
 
@@ -444,12 +448,14 @@ void Square::SetSolution(const string_t & solution)
         SetText(Black);
     SetSolutionRebus(solution);
     m_asciiSolution = ToPlain(solution);
+    m_solutions.clear();
 }
 
 void Square::SetSolution(const string_t & solution, char plain)
 {
     SetSolutionRebus(solution);
     SetPlainSolution(plain);
+    m_solutions.clear();
 }
 
 void Square::SetPlainSolution(char solution)
@@ -477,6 +483,75 @@ void Square::SetSolutionRebus(const string_t & rebus)
         if (m_solution.empty())
             m_solution = Blank;
     }
+}
+
+void Square::SetSolutions(const std::vector<SolutionEntry> & solutions, const string_t & canonical)
+{
+    m_solutions = solutions;
+    SetSolutionRebus(canonical);
+    m_asciiSolution = ToPlain(canonical);
+}
+
+string_t Square::DeriveCanonicalSolution(const std::vector<SolutionEntry> & solutions)
+{
+    if (solutions.empty())
+        return Blank;
+
+    if (HasOnlyDirectionalSolutions(solutions))
+    {
+        std::vector<string_t> dirAnswers;
+        std::vector<string_t> seenDirections;
+        for (size_t i = 0; i < solutions.size(); ++i)
+        {
+            if (std::find(seenDirections.begin(), seenDirections.end(), solutions[i].direction) == seenDirections.end())
+            {
+                seenDirections.push_back(solutions[i].direction);
+                dirAnswers.push_back(solutions[i].value);
+            }
+        }
+
+        string_t canonicalSolution;
+        for (size_t i = 0; i < dirAnswers.size(); ++i)
+        {
+            if (i > 0)
+                canonicalSolution += puzT("/");
+            canonicalSolution += dirAnswers[i];
+        }
+        return canonicalSolution;
+    }
+    else
+    {
+        return solutions[0].value;
+    }
+}
+
+void Square::SetSolutions(const std::vector<SolutionEntry> & solutions)
+{
+    SetSolutions(solutions, DeriveCanonicalSolution(solutions));
+}
+
+void Square::ClearSolutions()
+{
+    m_solutions.clear();
+    SetSolutionRebus(Blank);
+    m_asciiSolution = ToPlain(Blank);
+}
+
+bool Square::HasOnlyDirectionalSolutions(const std::vector<SolutionEntry> & solutions)
+{
+    if (solutions.empty())
+        return false;
+    for (size_t i = 0; i < solutions.size(); ++i)
+    {
+        if (solutions[i].direction.empty())
+            return false;
+    }
+    return true;
+}
+
+bool Square::HasOnlyDirectionalSolutions() const
+{
+    return HasOnlyDirectionalSolutions(m_solutions);
 }
 
 void Square::SetSolutionSymbol(unsigned char symbol)
@@ -527,16 +602,191 @@ char_t Square::GetSolutionSymbol() const
 
 
 
+
+
+static std::vector<string_t> SplitAndTrim(const string_t & str, char_t delim)
+{
+    std::vector<string_t> tokens;
+    size_t start = 0;
+    while (start <= str.length())
+    {
+        size_t pos = str.find(delim, start);
+        if (pos == string_t::npos)
+        {
+            tokens.push_back(TrimWhitespace(str.substr(start)));
+            break;
+        }
+        tokens.push_back(TrimWhitespace(str.substr(start, pos - start)));
+        start = pos + 1;
+    }
+    return tokens;
+}
+
+static bool TokenMatchesDirection(const string_t & token, const string_t & direction,
+                                  const std::vector<Square::SolutionEntry> & solutions,
+                                  bool strictRebus)
+{
+    for (size_t i = 0; i < solutions.size(); ++i)
+    {
+        if (solutions[i].direction == direction)
+        {
+            if (solutions[i].value == token)
+                return true;
+            if (! strictRebus && token.length() == 1 &&
+                Square::ToPlain(token) == Square::ToPlain(solutions[i].value))
+                return true;
+        }
+    }
+    return false;
+}
+
+static bool MatchDirectionalTokens(const std::vector<string_t> & tokens,
+                                   const std::vector<Square::SolutionEntry> & solutions,
+                                   bool strictRebus)
+{
+    std::vector<string_t> directions;
+    for (size_t i = 0; i < solutions.size(); ++i)
+    {
+        if (std::find(directions.begin(), directions.end(), solutions[i].direction) == directions.end())
+            directions.push_back(solutions[i].direction);
+    }
+
+    if (tokens.size() != directions.size())
+        return false;
+
+    std::vector<size_t> p(directions.size());
+    for (size_t i = 0; i < p.size(); ++i)
+        p[i] = i;
+
+    do {
+        bool allMatch = true;
+        for (size_t i = 0; i < p.size(); ++i)
+        {
+            if (! TokenMatchesDirection(tokens[i], directions[p[i]], solutions, strictRebus))
+            {
+                allMatch = false;
+                break;
+            }
+        }
+        if (allMatch)
+            return true;
+    } while (std::next_permutation(p.begin(), p.end()));
+
+    return false;
+}
+
+static bool MatchTokensToSolutions(const std::vector<string_t> & tokens,
+                                   const std::vector<Square::SolutionEntry> & solutions,
+                                   bool strictRebus)
+{
+    if (tokens.size() > solutions.size() || tokens.size() <= 1)
+        return false;
+
+    std::vector<size_t> p(solutions.size());
+    for (size_t i = 0; i < p.size(); ++i)
+        p[i] = i;
+
+    do {
+        bool allMatch = true;
+        for (size_t i = 0; i < tokens.size(); ++i)
+        {
+            const Square::SolutionEntry & sol = solutions[p[i]];
+            bool match = (tokens[i] == sol.value);
+            if (! match && ! strictRebus && tokens[i].length() == 1)
+            {
+                match = (Square::ToPlain(tokens[i]) == Square::ToPlain(sol.value));
+            }
+            if (! match)
+            {
+                allMatch = false;
+                break;
+            }
+        }
+        if (allMatch)
+            return true;
+    } while (std::next_permutation(p.begin(), p.end()));
+
+    return false;
+}
+
 bool Square::Check(bool checkBlank, bool strictRebus)  const
 {
     // Black squares should be checked as well (for diagramless)
     if (IsBlank() && ! IsSolutionBlank())
         return ! checkBlank;
 
-    if (strictRebus || (HasTextRebus() && HasSolutionRebus()))
-        return m_solution == m_text;
+    if (m_solutions.empty())
+    {
+        if (IsSolutionBlank())
+            return ! checkBlank;
+
+        if (strictRebus || (HasTextRebus() && HasSolutionRebus()))
+            return m_solution == m_text;
+        else
+            return GetPlainText() == GetPlainSolution();
+    }
+
+    std::vector<string_t> tokens = SplitAndTrim(m_text, puzT('/'));
+
+    if (HasOnlyDirectionalSolutions())
+    {
+        // Case 1: Directional solutions
+        if (tokens.size() > 1)
+            return MatchDirectionalTokens(tokens, m_solutions, strictRebus);
+
+        if (! strictRebus)
+        {
+            // If user entered a rebus, allow matching any single direction's full answer
+            if (HasTextRebus())
+            {
+                for (size_t i = 0; i < m_solutions.size(); ++i)
+                {
+                    if (m_text == m_solutions[i].value)
+                        return true;
+                }
+            }
+            else
+            {
+                // Single letter entry: check against plain solution of any valid candidate
+                const char plainText = GetPlainText();
+                for (size_t i = 0; i < m_solutions.size(); ++i)
+                {
+                    if (plainText == ToPlain(m_solutions[i].value))
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
     else
-        return GetPlainText() == GetPlainSolution();
+    {
+        // Case 2: Non-directional / directionless present
+        if (tokens.size() > 1)
+            return MatchTokensToSolutions(tokens, m_solutions, strictRebus);
+
+        if (m_text == m_solution)
+            return true;
+
+        for (size_t i = 0; i < m_solutions.size(); ++i)
+        {
+            if (m_text == m_solutions[i].value)
+                return true;
+        }
+
+        if (! strictRebus && ! HasTextRebus())
+        {
+            if (GetPlainText() == GetPlainSolution())
+                return true;
+
+            const char plainText = GetPlainText();
+            for (size_t i = 0; i < m_solutions.size(); ++i)
+            {
+                if (plainText == ToPlain(m_solutions[i].value))
+                    return true;
+            }
+        }
+        return false;
+    }
 }
 
 bool Square::IsSymbol(const string_t & str)

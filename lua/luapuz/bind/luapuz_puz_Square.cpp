@@ -449,6 +449,22 @@ static int Square_HasSolutionSymbol(lua_State * L)
     lua_pushboolean(L, returns);
     return 1;
 }
+// bool HasMultipleSolutions()
+static int Square_HasMultipleSolutions(lua_State * L)
+{
+    puz::Square * square = luapuz_checkSquare(L, 1);
+    bool returns = square->HasMultipleSolutions();
+    lua_pushboolean(L, returns);
+    return 1;
+}
+// bool HasOnlyDirectionalSolutions()
+static int Square_HasOnlyDirectionalSolutions(lua_State * L)
+{
+    puz::Square * square = luapuz_checkSquare(L, 1);
+    bool returns = square->HasOnlyDirectionalSolutions();
+    lua_pushboolean(L, returns);
+    return 1;
+}
 // bool Check(bool checkBlank = false, bool strictRebus = false)
 static int Square_Check(lua_State * L)
 {
@@ -861,6 +877,8 @@ static const luaL_reg Squarelib[] = {
     {"SetSolutionSymbol", Square_SetSolutionSymbol},
     {"HasSolutionRebus", Square_HasSolutionRebus},
     {"HasSolutionSymbol", Square_HasSolutionSymbol},
+    {"HasMultipleSolutions", Square_HasMultipleSolutions},
+    {"HasOnlyDirectionalSolutions", Square_HasOnlyDirectionalSolutions},
     {"Check", Square_Check},
     {"HasNumber", Square_HasNumber},
     {"GetNumber", Square_GetNumber},

@@ -217,18 +217,27 @@ int Puzzle_Save(lua_State * L)
     return 0;
 }
 // void LoadIpuzString(const char * data)
-static int Puzzle_LoadIpuzString(lua_State * L)
+// Separate try/catch function
+static int Puzzle_LoadIpuzString_try(lua_State * L)
 {
     puz::Puzzle * puzzle = luapuz_checkPuzzle(L, 1);
     const char * data = luaL_checkstring(L, 2);
     try {
         puzzle->LoadIpuzString(data);
         return 0;
-    } catch (...) {
+    }
+    catch (...) {
         luapuz_handleExceptions(L);
     }
-    lua_error(L);
-    return 0;
+    return -1; // An error is on the stack
+}
+// The lua function (no exceptions)
+static int Puzzle_LoadIpuzString(lua_State * L)
+{
+    int code = Puzzle_LoadIpuzString_try(L);
+    if (code == -1)
+        lua_error(L);
+    return code;
 }
 // static bool CanLoad(const char * filename)
 static int Puzzle_CanLoad(lua_State * L)
