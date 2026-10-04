@@ -1,5 +1,4 @@
 version: '{build}'
-test: off
 
 image:
   - Visual Studio 2015
@@ -58,9 +57,12 @@ for:
     - IF %CONFIGURATION%==Release pushd dist & python gen_nsis.py > scripts.nsi & "%ProgramFiles(x86)%\NSIS\makensis.exe" /V4 XWord.nsi & popd
     - IF %CONFIGURATION%==Release sed -e "s/{VERSION}/%XWORD_VERSION%/" -e "s/{OS_FILE}/XWord-Windows.exe/" dist/packages_template.lua > dist/packages_windows.lua
 
+  test_script:
+    - bin\%CONFIGURATION%\puz_test.exe
+
   # Zip the full build folder and make it available as an artifact.
   after_build:
-    - 7z a bin\%CONFIGURATION%\XWord-Windows.zip "%APPVEYOR_BUILD_FOLDER%\bin\%CONFIGURATION%\*" -r -x!*.exp -x!*.lib -x!*.pdb -x!*.idb -x!*.ilk -x!*.fbp
+    - 7z a bin\%CONFIGURATION%\XWord-Windows.zip "%APPVEYOR_BUILD_FOLDER%\bin\%CONFIGURATION%\*" -r -x!*.exp -x!*.lib -x!*.pdb -x!*.idb -x!*.ilk -x!*.fbp -x!puz_test.exe
 
   artifacts:
     - path: bin\%CONFIGURATION%\XWord-Windows.zip
@@ -102,7 +104,12 @@ for:
   # Build XWord
   build_script:
     - xcodebuild -project build/xcode4/XWord.xcodeproj -configuration "$CONFIGURATION" build
+    - xcodebuild -project build/xcode4/puz_test.xcodeproj -configuration "$CONFIGURATION" build
     - if [ "$CONFIGURATION" == "Release" ]; then sed -e "s/{VERSION}/${XWORD_VERSION}/" -e "s/{OS_FILE}/XWord-macOS.zip/" dist/packages_template.lua > dist/packages_mac.lua; fi
+
+  test_script:
+    - ln -sf "$(pwd)/bin/$CONFIGURATION/XWord.app/Contents/Frameworks" bin/Frameworks
+    - bin/$CONFIGURATION/puz_test
 
   # Sign and zip the full build folder and make it available as an artifact.
   after_build:

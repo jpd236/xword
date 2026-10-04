@@ -81,6 +81,7 @@ solution "XWord"
     if not _OPTIONS["disable-lua"] then
         include "lua" -- lua libraries
     end
+    include "puz/test" -- puz unit tests
 
 
 -- Mac stuff

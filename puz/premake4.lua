@@ -10,6 +10,9 @@ project "puz"
         "**.c",
         "**.h",
     }
+    excludes {
+        "test/**",
+    }
 
     configuration "not windows"
         excludes { "utils/minizip/iowin32.*" }
